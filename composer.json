@@ -1,0 +1,10 @@
+{
+    "name": "aist/tourdashboard",
+    "authors": [
+        {
+            "name": "Shant Chakhmakhchyan",
+            "email": "chakhmakhchyan96@gmail.com"
+        }
+    ],
+    "require": {}
+}
