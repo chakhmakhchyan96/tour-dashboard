@@ -6,5 +6,15 @@
             "email": "chakhmakhchyan96@gmail.com"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "AISTGlobal\\TourDashboard\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AISTGlobal\\TourDashboard\\": "tests"
+        }
+    }
 }
