@@ -6,7 +6,10 @@
             "email": "chakhmakhchyan96@gmail.com"
         }
     ],
-    "require": {},
+    "require": {
+        "mcamara/laravel-localization": "^1.3",
+        "rosell-dk/webp-convert": "^1.3"
+    },
     "autoload": {
         "psr-4": {
             "AISTGlobal\\TourDashboard\\": "src/"
@@ -14,7 +17,12 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "AISTGlobal\\TourDashboard\\": "tests"
+            "AISTGlobal\\TourDashboard\\": "src/"
         }
+    },"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/chakhmakhchyan96/tour-dashboard.git"
     }
+    ]
 }
