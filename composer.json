@@ -1,5 +1,5 @@
 {
-    "name": "aistglobal/tourdashboard",
+    "name": "aist/tourdashboard",
     "type": "library",
     "description": "Tour Dashboard For Laravel",
     "keywords": ["tour", "dashboard"],
