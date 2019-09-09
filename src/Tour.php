@@ -2,14 +2,15 @@
 
 namespace AISTGlobal\TourDashboard;
 
-use AISTGlobal\TourDashboard\Services\DataService;
+use App\Hotel; // need to fix
+use App\Services\DataService;
 use Illuminate\Database\Eloquent\Model;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class Tour extends Model
 {
     protected $table = 'tours';
-    protected $fillable = ['created_at', 'price', 'slug', 'status', 'age_from', 'map'];
+    protected $fillable = ['created_at', 'price', 'slug', 'status', 'age_from', 'map', 'start_date', 'end_date', 'start_time', 'end_time'];
 
     public function data()
     {
@@ -37,11 +38,6 @@ class Tour extends Model
         return $this->hasMany(TourFeature::class)->where('language', $lang);
     }
 
-    public function bookings()
-    {
-        return $this->hasMany(TourBooking::class);
-    }
-
     public function included()
     {
         $lang = LaravelLocalization::getCurrentLocale();
@@ -56,6 +52,17 @@ class Tour extends Model
     public function allLocations()
     {
         return $this->hasMany(TourLocation::class);
+    }
+
+    public function facilities()
+    {
+        return $this->belongsToMany(Facilities::class, 'tour_facilities', 'tour_id', 'facility_id', 'id', 'id')
+            ->withPivot('type');
+    }
+
+    public function hotels()
+    {
+        return $this->belongsToMany(Hotel::class, 'tour_hotels', 'tour_id', 'hotel_id');
     }
 
     public function location()
@@ -80,6 +87,16 @@ class Tour extends Model
         return $this->hasMany(TourPlanDay::class);
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(TourReview::class);
+    }
+
+    public function prices()
+    {
+        return $this->hasMany(TourPrice::class);
+    }
+
     public function images()
     {
         return $this->hasMany(Image::class, 'resource_id')->where('resource_type', 'tour');
@@ -92,12 +109,12 @@ class Tour extends Model
 
     public static function saveData($data)
     {
-        $data['slug'] = DataService::getSlug($data['title_en'], 'AISTGlobal\TourDashboard\Tour');
 
         if (array_key_exists('tour_id', $data)) {
             $tour = Tour::updateOrCreate(['id' => $data['tour_id']], $data);
             (new DataService())->updateData($data, $tour->id, new TourData());
         } else {
+            $data['slug'] = DataService::getSlug($data['title_en'], 'App\Tour');
             $tour = Tour::create($data);
             (new DataService())->saveData($data, $tour->id, new TourData());
         }
@@ -116,7 +133,24 @@ class Tour extends Model
             $tour->category()->sync([]);
         }
 
-        return $tour->id;
+        $keys = ['breakfast', 'lunch', 'dinner'];
 
+        foreach ($keys as $key) {
+
+            if (array_key_exists($key . '_price', $data) && $data[$key . '_price']) {
+                $can_refuse = 0;
+                if (array_key_exists($key . '_can_refuse', $data) && $data[$key . '_can_refuse']) {
+                    $can_refuse = 1;
+                }
+                TourPrice::create([
+                    'tour_id' => $tour->id,
+                    'type' => $key,
+                    'price' => $data[$key . '_price'],
+                    'can_refuse' => $can_refuse,
+                ]);
+            }
+        }
+
+        return $tour->id;
     }
 }

@@ -14,27 +14,23 @@
 
 </style>
 @section('content')
-    <div class="container">
-        <div class="row">
 
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">{{trans('dashboard_tours.update_tour')}} {{$tour->id}}
-                    </div>
-
-                    <div class="card-body">
-                        @if ($errors->any())
-                            <ul class="alert alert-danger">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        @endif
-                        @include('dashboard.tour.form')
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="card">
+    <div class="card-header white-bg border-bottom-0 mb-3">
+       <h2 class="text-center">{{trans('dashboard_tours.update_tour')}} {{$tour->id}}</h2>
     </div>
+
+    <div class="card-body">
+        @if ($errors->any())
+            <ul class="alert alert-danger">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        @endif
+        @include('tour-views::tour.form')
+    </div>
+</div>
+
 @endsection
 

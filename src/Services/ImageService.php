@@ -1,6 +1,6 @@
 <?php
 
-namespace AISTGlobal\TourDashboard\Services;
+namespace AISTGlobal\TourDashboard;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -28,16 +28,16 @@ class ImageService
                 $contest = file_get_contents($file);
                 $s3->put($filePath, $contest, 'public');
 
-                $file->move(public_path('/temp/'), $imageFileName);
+                $file->move(public_path('/tempFolder/'), $imageFileName);
 
-                WebPConvert::convert(public_path('/temp/') . $imageFileName, public_path('/temp/') . $imageFileName . '.webp', [
+                WebPConvert::convert(public_path('/tempFolder/') . $imageFileName, public_path('/tempFolder/') . $imageFileName . '.webp', [
                     'quality' => 'auto',
                     'max-quality' => 80,
                     'converters' => ['cwebp', 'imagick', 'wpc', 'ewww', 'gd'],]);
 
-                $s3->put($filePath . '.webp', file_get_contents(public_path('/temp/') . $imageFileName . '.webp'), 'public');
-                unlink(public_path('/temp/') . $imageFileName . '.webp');
-                unlink(public_path('/temp/') . $imageFileName);
+                $s3->put($filePath . '.webp', file_get_contents(public_path('/tempFolder/') . $imageFileName . '.webp'), 'public');
+                unlink(public_path('/tempFolder/') . $imageFileName . '.webp');
+                unlink(public_path('/tempFolder/') . $imageFileName);
             } catch (\Exception $e) {
 
                 dd($e->getMessage());
@@ -59,16 +59,16 @@ class ImageService
                 $contest = file_get_contents($file);
                 $s3->put($filePath, $contest, 'public');
 
-                Image::make($contest)->save(public_path('/temp/') . $imageFileName);
+                Image::make($contest)->save(public_path('/tempFolder/') . $imageFileName);
 
-                WebPConvert::convert(public_path('/temp/') . $imageFileName, public_path('/temp/') . $imageFileName . '.webp', [
+                WebPConvert::convert(public_path('/tempFolder/') . $imageFileName, public_path('/tempFolder/') . $imageFileName . '.webp', [
                     'quality' => 'auto',
                     'max-quality' => 80,
                     'converters' => ['cwebp', 'imagick', 'wpc', 'ewww', 'gd'],]);
 
-                $s3->put($filePath . '.webp', file_get_contents(public_path('/temp/') . $imageFileName . '.webp'), 'public');
-                unlink(public_path('/temp/') . $imageFileName . '.webp');
-                unlink(public_path('/temp/') . $imageFileName);
+                $s3->put($filePath . '.webp', file_get_contents(public_path('/tempFolder/') . $imageFileName . '.webp'), 'public');
+                unlink(public_path('/tempFolder/') . $imageFileName . '.webp');
+                unlink(public_path('/tempFolder/') . $imageFileName);
             } catch (\Exception $e) {
 
             } finally {
@@ -132,20 +132,20 @@ class ImageService
         try {
             Image::make($input)->resize($width, null, function ($constraint) {
                 $constraint->aspectRatio();
-            })->save(public_path('/temp/') . $name);
+            })->save(public_path('/tempFolder/') . $name);
 
             $s3 = Storage::disk('s3');
             $filePath = "$repo/thumb/$width/" . $name;
-            $s3->put($filePath, file_get_contents(public_path('/temp/') . $name), 'public');
+            $s3->put($filePath, file_get_contents(public_path('/tempFolder/') . $name), 'public');
 
-            WebPConvert::convert(public_path('/temp/') . $name, public_path('/temp/') . $name . '.webp', [
+            WebPConvert::convert(public_path('/tempFolder/') . $name, public_path('/tempFolder/') . $name . '.webp', [
                 'quality' => 'auto',
                 'max-quality' => 80,
                 'converters' => ['cwebp', 'imagick', 'wpc', 'ewww', 'gd'],]);
 
-            $s3->put($filePath . '.webp', file_get_contents(public_path('/temp/') . $name . '.webp'), 'public');
-            unlink(public_path('/temp/') . $name . '.webp');
-            unlink(public_path('/temp/') . $name);
+            $s3->put($filePath . '.webp', file_get_contents(public_path('/tempFolder/') . $name . '.webp'), 'public');
+            unlink(public_path('/tempFolder/') . $name . '.webp');
+            unlink(public_path('/tempFolder/') . $name);
         } catch (\Exception $e) {
 
         }

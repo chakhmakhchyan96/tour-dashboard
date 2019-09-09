@@ -1,7 +1,5 @@
 <?php
 
-namespace App;
-
 namespace AISTGlobal\TourDashboard;
 
 use Illuminate\Database\Eloquent\Model;

@@ -2,55 +2,55 @@
 
 namespace AISTGlobal\TourDashboard;
 
-use AISTGlobal\TourDashboard\Category;
-use AISTGlobal\TourDashboard\Image;
-use AISTGlobal\TourDashboard\Services\DataService;
-use AISTGlobal\TourDashboard\TourData;
-use AISTGlobal\TourDashboard\TourIncluded;
-use AISTGlobal\TourDashboard\TourLocation;
-use AISTGlobal\TourDashboard\TourPlan;
-use AISTGlobal\TourDashboard\TourPlanDay;
-use AISTGlobal\TourDashboard\TourPlanDayData;
-use AISTGlobal\TourDashboard\TourPlanDayFeature;
+use App\Hotel; // need to fix
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use AISTGlobal\TourDashboard\Tour;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use App\Http\Controllers\Controller;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class TourController extends Controller
 {
-
-    /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        $tours = Tour::all();
-        return view('dashboard.tour.index', compact('tours'));
+        $tours = Tour::with('data', 'category.data')->get();
+        return view('tour-views::tour.index', compact('tours'));
     }
 
     public function create()
     {
         $languages = LaravelLocalization::getSupportedLocales();
-        $categories = Category::where('status', 1)->with('data')->get();
-        return view('dashboard.tour.create', compact('languages', 'categories'));
+        $categories = Category::where('status', 1)->where('type', 'tour')->with('data')->get();
+        $facilities = Facilities::where('status', 1)->with('data')->get();
+
+        $hotelsGrouped = [];
+        if(config('tour.include_hotels')){
+            $hotels = Hotel::where('status', 1)->with('data')->get();
+            $hotelsGrouped = $hotels->groupBy('stars');
+        }
+
+        return view('tour-views::tour.create', compact('languages', 'categories', 'facilities', 'hotelsGrouped'));
     }
 
     public function edit($id)
     {
         $languages = LaravelLocalization::getSupportedLocales();
 
-        $tour = Tour::with('allIncluded', 'allPlans', 'allData', 'allPlanDays.allData',
-            'allPlanDays.allFeatures', 'images', 'allLocations', 'category.data')->find($id);
+        $tour = Tour::with('allIncluded', 'allPlans', 'allData', 'allPlanDays.allData', 'hotels', 'facilities',
+            'allPlanDays.allFeatures', 'images', 'prices', 'allLocations', 'category.data')->findOrFail($id);
+
+        $tour->included = $tour->allIncluded->groupBy('mirror');
+        foreach ($tour->included as $item){
+            $item->data = $item->keyBy('language');
+        }
 
         $tour->data = $tour->allData->keyBy('language');
         $tour->feature = $tour->allFeatures->groupBy('language');
         $tour->plan = $tour->allPlans->keyBy('language');
         $tour->location = $tour->allLocations->keyBy('language');
+        $tour->prices = $tour->prices->keyBy('type');
+        $tour->facilities = $tour->facilities->keyBy('id');
         foreach ($tour->allPlanDays as $item) {
             $item->data = $item->allData->keyBy('language');
             $item->feature = $item->allFeatures->groupBy('language');
@@ -59,80 +59,74 @@ class TourController extends Controller
             }
         }
 
-        if (!$tour) {
-            abort(404);
+        $categories = Category::where('status', 1)->where('type', 'tour')->with('data')->get();
+        $facilities = Facilities::where('status', 1)->with('data')->get();
+
+        $hotelsGrouped = [];
+        if(config('tour.include_hotels')) {
+            $hotels = Hotel::where('status', 1)->with('data')->get();
+            $hotelsGrouped = $hotels->groupBy('stars');
         }
 
-        $categories = Category::where('status', 1)->with('data')->get();
-
-        return view('dashboard.tour.edit', compact('tour', 'languages', 'categories'));
+        return view('tour-views::tour.edit', compact('tour', 'languages', 'categories', 'facilities', 'hotelsGrouped'));
     }
 
-    public function store(Request $request)
+    public function store(TourRequest $request)
     {
-        $rules = [];
-        $langs = LaravelLocalization::getSupportedLocales();
-        foreach ($langs as $key => $value) {
-
-            $rules['title_' . $key] = 'required|max:255';
-        }
-
-        $request->validate($rules);
         $data = $request->all();
         $data['price'] = $request->get('price') ?? 0;
+        $data['start_date'] = $request->get('start_date') ? Carbon::createFromFormat('m/d/Y', $request->get('start_date')) : null;
+        $data['end_date'] = $request->get('end_date') ? Carbon::createFromFormat('m/d/Y', $request->get('end_date')) : null;
         $tour_id = Tour::saveData($data);
         return response()->json(['tour_id' => $tour_id]);
     }
 
 
-    public function update(Request $request, $id)
+    public function update(TourRequest $request, $id)
     {
-        $rules = [];
-        $langs = LaravelLocalization::getSupportedLocales();
-        foreach ($langs as $key => $value) {
-
-            $rules['title_' . $key] = 'required|max:255';
-        }
-
-        $request->validate($rules);
-
         $this->data($request, $id);
         return redirect()->back();
     }
 
-    public function storeTourIncluded(Request $request)
+    public function storeFacilities(Request $request)
     {
         if ($request->has('tour_id')) {
             $requestData = $request->all();
-            $response = [];
 
-            $langs = LaravelLocalization::getSupportedLocales();
+            $tour = Tour::find($requestData['tour_id']);
 
-            foreach ($langs as $localeCode => $properties) {
-                if ($requestData['text_' . $localeCode]) {
+            $tour->facilities()->sync([]);
+            if (array_key_exists('facilities', $requestData) && count($requestData['facilities'])) {
 
-                    $included = TourIncluded::create(['text' => $requestData['text_' . $localeCode],
-                        'tour_id' => $requestData['tour_id'], 'language' => $localeCode]);
-                    $included['languageDisplayName'] = trans('dashboard_forms.' . $localeCode);
-                    $response[$included->id] = $included;
+                foreach ($requestData['facilities'] as $item) {
+                    TourFacility::create([
+                        'tour_id' => $tour->id,
+                        'facility_id' => $item,
+                        'type' => $requestData['facilitiesType'][$item],
+                    ]);
                 }
             }
-            return response()->json($response);
+
+            return response()->json(['success' => true], 200);
         }
 
         return response()->json(['success' => false], 400);
     }
 
-    public function updateTourIncluded($id, Request $request)
+    public function storeHotels(Request $request)
     {
-        if ($request->has('text')) {
-            $response = [];
-            $included = TourIncluded::find($id);
-            $included->text = $request->get('text');
-            $included->save();
-            $response[$included->id] = $included;
+        if ($request->has('tour_id')) {
+            $requestData = $request->all();
 
-            return response()->json($response);
+            $tour = Tour::find($requestData['tour_id']);
+
+            if (array_key_exists('hotels', $requestData) && count($requestData['hotels'])) {
+                $tour->hotels()->sync($requestData['hotels']);
+            } else {
+                $tour->hotels()->sync([]);
+            }
+
+            return response()->json(['success' => true], 200);
         }
 
         return response()->json(['success' => false], 400);
@@ -165,6 +159,7 @@ class TourController extends Controller
 
     public function storeTourGallery(Request $request)
     {
+        $request->validate(['gallery_images.*'=>'mimes:jpeg,jpg,png|max:4096']);
         if ($request->has('tour_id')) {
             $requestData = $request->all();
             (new DataService())->updateData($requestData, $requestData['tour_id'], new TourData());
@@ -225,6 +220,7 @@ class TourController extends Controller
 
     public function storeTourMeta(Request $request)
     {
+        $request->validate(['meta_image'=>'mimes:jpeg,jpg,png|max:4096']);
         if ($request->has('tour_id')) {
 
             $data = $request->all();
@@ -249,7 +245,7 @@ class TourController extends Controller
 
     public function deleteTourIncluded($id)
     {
-        TourIncluded::destroy($id);
+        TourIncluded::where('mirror', $id)->delete();
 
         return response()->json(['success' => true]);
     }
@@ -261,11 +257,6 @@ class TourController extends Controller
         TourPlanDayFeature::where('tour_plan_day_id', $id)->delete();
 
         return response()->json(['success' => true]);
-    }
-
-    public function show($id)
-    {
-
     }
 
     public function destroy($id)

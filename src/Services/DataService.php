@@ -1,6 +1,6 @@
 <?php
 
-namespace AISTGlobal\TourDashboard\Services;
+namespace AISTGlobal\TourDashboard;
 
 use function dump;
 use Illuminate\Support\Str;
@@ -55,6 +55,7 @@ class DataService {
                     }
                 }
             }
+
 
             $dataObject::create($data);
         }

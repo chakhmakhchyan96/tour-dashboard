@@ -4,13 +4,13 @@ namespace AISTGlobal\TourDashboard;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TourIncluded extends Model
+class TourPrice extends Model
 {
-    protected $table = "tour_includeds";
+    protected $table = "tour_prices";
 
     public $foreignKey = 'tour_id';
 
     protected $fillable = [
-        'tour_id', 'language', 'text', 'mirror'
+        'tour_id', 'price', 'type', 'can_refuse'
     ];
 }

@@ -13,8 +13,12 @@ class TourDashboardServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->make('AISTGlobal\TourDashboard\TourCategoryController');
+        $this->app->make('AISTGlobal\TourDashboard\TourFacilitiesController');
+        $this->app->make('AISTGlobal\TourDashboard\CategoryController');
         $this->app->make('AISTGlobal\TourDashboard\TourController');
+        $this->mergeConfigFrom(
+            __DIR__.'/config/tour.php', 'tour'
+        );
     }
 
     /**
@@ -28,9 +32,14 @@ class TourDashboardServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/migrations');
 
         $this->loadViewsFrom(__DIR__.'/views', 'tour-views');
+        $this->loadViewsFrom(__DIR__.'/resources', 'tour-resources');
 
         $this->publishes([
-            __DIR__.'/views' => resource_path('views/vendor/tour-views'),
+            __DIR__.'/config/tour.php' => config_path('tour.php'),
         ]);
+        $this->publishes([
+            __DIR__.'/assets' => public_path('vendor/tour-dashboard'),
+        ], 'public');
     }
+
 }
