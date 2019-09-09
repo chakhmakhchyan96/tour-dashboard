@@ -40,6 +40,9 @@ class TourDashboardServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/assets' => public_path('vendor/tour-dashboard'),
         ], 'public');
+        $this->publishes([
+            __DIR__.'/views/layouts' => base_path('resources/views/dashboard/layouts'),
+        ], 'views');
     }
 
 }

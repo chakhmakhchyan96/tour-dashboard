@@ -652,7 +652,6 @@
 
 @section('css')
 
-
     <link href="{{ asset('vendor/tour-dashboard/css/jquery.steps.css') }}" rel="stylesheet">
     <link href="{{ asset('vendor/tour-dashboard/css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
     <link href="{{ asset('vendor/tour-dashboard/css/bootstrap-datetimepicker.min.css') }}" rel="stylesheet">
