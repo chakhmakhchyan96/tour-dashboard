@@ -20,6 +20,7 @@ class ImageService
      */
     public static function savePhoto($file, $path)
     {
+        set_time_limit(100000000);
         if ($file) {
             try {
                 $imageFileName = time() . rand(1, 999999999) . '.' . $file->getClientOriginalExtension();
@@ -50,6 +51,7 @@ class ImageService
 
     public static function saveBase64Photo($file, $path, $object, $key = 'photo')
     {
+        set_time_limit(100000000);
         if ($file) {
             try {
 
@@ -137,7 +139,6 @@ class ImageService
             $s3 = Storage::disk('public');
             $filePath = "$repo/thumb/$width/" . $name;
             $s3->put($filePath, file_get_contents(public_path('/tempFolder/') . $name), 'public');
-
             WebPConvert::convert(public_path('/tempFolder/') . $name, public_path('/tempFolder/') . $name . '.webp', [
                 'quality' => 'auto',
                 'max-quality' => 80,
