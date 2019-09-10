@@ -2,7 +2,6 @@
 
 namespace AISTGlobal\TourDashboard;
 
-use App\Services\ImageService;
 use Illuminate\Database\Eloquent\Model;
 
 class Image extends Model
