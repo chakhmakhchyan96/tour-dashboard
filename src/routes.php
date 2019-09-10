@@ -10,16 +10,19 @@ Route::group(
 
     function () {
 
-        Route::resource('tours', '\AISTGlobal\TourDashboard\TourController');
+        Route::resource('tours', '\AISTGlobal\TourDashboard\TourController')->except([
+            'show'
+        ]);
+        Route::resource('facilities', '\AISTGlobal\TourDashboard\TourFacilitiesController')->except([
+            'show'
+        ]);
 
         Route::resource('categories', '\AISTGlobal\TourDashboard\CategoryController')->except([
             'create', 'index', 'show'
         ]);
-
         Route::get('/categories/create/{type}', '\AISTGlobal\TourDashboard\CategoryController@create');
         Route::get('/categories/{type}', '\AISTGlobal\TourDashboard\CategoryController@index');
 
-        Route::resource('facilities', '\AISTGlobal\TourDashboard\TourFacilitiesController');
     });
 
 Route::group(
