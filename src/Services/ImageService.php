@@ -23,7 +23,7 @@ class ImageService
         if ($file) {
             try {
                 $imageFileName = time() . rand(1, 999999999) . '.' . $file->getClientOriginalExtension();
-                $s3 = Storage::disk('s3');
+                $s3 = Storage::disk('public');
                 $filePath = '/' . $path . '/' . $imageFileName;
                 $contest = file_get_contents($file);
                 $s3->put($filePath, $contest, 'public');
@@ -54,7 +54,7 @@ class ImageService
             try {
 
                 $imageFileName = time() . rand(1, 999999999) . '.jpg';
-                $s3 = Storage::disk('s3');
+                $s3 = Storage::disk('public');
                 $filePath = '/' . $path . '/' . $imageFileName;
                 $contest = file_get_contents($file);
                 $s3->put($filePath, $contest, 'public');
@@ -83,7 +83,7 @@ class ImageService
     {
         if ($file) {
             $fileName = time() . rand(1, 999999999) . '.' . $file->getClientOriginalExtension();
-            $s3 = Storage::disk('s3');
+            $s3 = Storage::disk('public');
             $filePath = '/' . $path . '/' . $fileName;
 
             $s3->put($filePath, file_get_contents($file), 'public');
@@ -134,7 +134,7 @@ class ImageService
                 $constraint->aspectRatio();
             })->save(public_path('/tempFolder/') . $name);
 
-            $s3 = Storage::disk('s3');
+            $s3 = Storage::disk('public');
             $filePath = "$repo/thumb/$width/" . $name;
             $s3->put($filePath, file_get_contents(public_path('/tempFolder/') . $name), 'public');
 
